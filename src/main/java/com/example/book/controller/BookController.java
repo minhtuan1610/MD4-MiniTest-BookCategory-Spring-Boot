@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
+@CrossOrigin("*")
 @RequestMapping("/books")
 public class BookController {
     @Autowired
@@ -65,8 +66,13 @@ public class BookController {
         if (bookOptional.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-//        Book book = bookOptional.get();
         bookService.remove(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @GetMapping("/category")
+    public ResponseEntity<Iterable<Category>> findAllCategory() {
+        Iterable<Category> categories = categoryService.findAll();
+        return new ResponseEntity<>(categories, HttpStatus.OK);
     }
 }

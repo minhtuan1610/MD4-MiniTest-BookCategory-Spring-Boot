@@ -14,7 +14,7 @@ public class CategoryService implements ICategoryService {
 
     @Override
     public Iterable<Category> findAll() {
-        return null;
+        return categoryRepository.findAll();
     }
 
     @Override
