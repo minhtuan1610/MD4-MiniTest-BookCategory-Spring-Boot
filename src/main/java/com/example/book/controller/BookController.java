@@ -29,13 +29,6 @@ public class BookController {
         return categoryService.findAll();
     }
 
-    @GetMapping("/list")
-    public ModelAndView getAllBooks() {
-        ModelAndView modelAndView = new ModelAndView("/book/list");
-        modelAndView.addObject("books", bookService.findAll());
-        return modelAndView;
-    }
-
     @GetMapping("")
     public ResponseEntity<Iterable<Book>> listAllBooks() {
         Iterable<Book> books = bookService.findAll();
