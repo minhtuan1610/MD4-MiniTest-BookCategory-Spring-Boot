@@ -2,7 +2,6 @@ package com.example.book.controller;
 
 import com.example.book.model.Book;
 import com.example.book.model.Category;
-import com.example.book.repository.ICategoryRepository;
 import com.example.book.service.book.IBookService;
 import com.example.book.service.category.ICategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,12 +9,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.ModelAndView;
 
 import java.util.List;
 import java.util.Optional;
 
-@RestController
+@Controller
 @CrossOrigin("*")
 @RequestMapping("/books")
 public class BookController {
@@ -67,5 +65,14 @@ public class BookController {
     public ResponseEntity<Iterable<Category>> findAllCategory() {
         Iterable<Category> categories = categoryService.findAll();
         return new ResponseEntity<>(categories, HttpStatus.OK);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Book> findBookById(@PathVariable Long id) {
+        Optional<Book> bookOptional = bookService.findById(id);
+        if (bookOptional.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        return new ResponseEntity<>(bookOptional.get(), HttpStatus.OK);
     }
 }
