@@ -1,15 +1,21 @@
 package com.example.book.controller;
 
 import com.example.book.model.Book;
+import com.example.book.model.BookForm;
 import com.example.book.model.Category;
 import com.example.book.service.book.IBookService;
 import com.example.book.service.category.ICategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,6 +23,8 @@ import java.util.Optional;
 @CrossOrigin("*")
 @RequestMapping("/books")
 public class BookController {
+    @Autowired
+    Environment environment;
     @Autowired
     private IBookService bookService;
     @Autowired
@@ -35,20 +43,43 @@ public class BookController {
     }
 
     @PostMapping("")
-    public ResponseEntity<Book> createBook(@RequestBody Book book) {
+    public ResponseEntity<Book> createBook(@ModelAttribute BookForm bookForm) {
+        MultipartFile multipartFile = bookForm.getImage();
+        String fileName = multipartFile.getOriginalFilename();
+        String fileUpload = environment.getProperty("upload.path");
+        try {
+            FileCopyUtils.copy(multipartFile.getBytes(), new File(fileUpload + fileName));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Book book = new Book(bookForm.getName(), bookForm.getPrice(), bookForm.getAuthor(), fileName,
+                bookForm.getCategory());
         bookService.save(book);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Book> updateBook(@PathVariable Long id, @RequestBody Book book) {
+    @PostMapping("/{id}")
+    public ResponseEntity<Book> updateBook(@PathVariable Long id, @ModelAttribute BookForm bookForm) {
         Optional<Book> bookOptional = bookService.findById(id);
+        bookForm.setId(bookOptional.get().getId());
+        MultipartFile multipartFile = bookForm.getImage();
+        String fileName = multipartFile.getOriginalFilename();
+        String fileUpload = environment.getProperty("upload.path");
+        Book existBook = new Book(bookForm.getName(), bookForm.getPrice(), bookForm.getAuthor(), fileName,
+                bookForm.getCategory());
+        try {
+            FileCopyUtils.copy(multipartFile.getBytes(), new File(fileUpload + fileName));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         if (bookOptional.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-        book.setId(bookOptional.get().getId());
-        bookService.save(book);
-        return new ResponseEntity<>(HttpStatus.ACCEPTED);
+        if (existBook.getImage().equals("fileName.jpg")) {
+            existBook.setImage(bookOptional.get().getImage());
+        }
+        bookService.save(existBook);
+        return new ResponseEntity<>(existBook, HttpStatus.ACCEPTED);
     }
 
     @DeleteMapping("/{id}")
